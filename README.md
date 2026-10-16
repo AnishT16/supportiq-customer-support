@@ -292,14 +292,106 @@ supportiq/
 ```
 
 ## 15. API Design
-| Area | Endpoint examples |
-|---|---|
-| Authentication | `POST /api/auth/register/` \| `POST /api/auth/login/` |
-| Orders | `GET /api/orders/` \| `GET /api/orders/{id}/` |
-| Support | `POST /api/support/chat/` \| `GET /api/tickets/` |
-| Prediction | `GET /api/predictions/` \| `POST /api/predictions/run/` |
-| Simulation | `POST /api/simulations/` \| `GET /api/simulations/{id}/` |
-| Approval | `POST /api/simulations/{id}/approve/` \| `reject/` |
+| Area | Endpoint | Auth | Description |
+|---|---|---|---|
+| Authentication | `POST /api/auth/register/` | Public | Register customer account |
+| Authentication | `POST /api/auth/login/` | Public | JWT login (returns access, refresh, user) |
+| Authentication | `POST /api/auth/refresh/` | Public | Refresh expired JWT access token |
+| Authentication | `GET /api/auth/me/` | Bearer Token | Retrieve authenticated user profile |
+| Authentication | `PUT / PATCH /api/auth/me/` | Bearer Token | Update permitted profile fields |
+| Customers | `GET /api/customers/` | Bearer Token | List customers (own for Customer, all for Agent/Manager/Admin) |
+| Customers | `POST /api/customers/` | Bearer Token | Create customer profile |
+| Customers | `GET /api/customers/{id}/` | Bearer Token | Retrieve customer profile details |
+| Customers | `PUT / PATCH /api/customers/{id}/` | Bearer Token | Update customer profile details |
+| Customers | `DELETE /api/customers/{id}/` | Bearer Token | Delete customer (Manager/Admin only) |
+| Tickets | `GET /api/tickets/` | Bearer Token | List tickets (filtered by role & query params) |
+| Tickets | `POST /api/tickets/` | Bearer Token | Create ticket (own for Customer, any for Staff) |
+| Tickets | `GET /api/tickets/{id}/` | Bearer Token | Retrieve ticket details |
+| Tickets | `PUT / PATCH /api/tickets/{id}/` | Bearer Token | Update ticket fields according to role permissions |
+| Tickets | `DELETE /api/tickets/{id}/` | Bearer Token | Delete ticket (Manager/Admin only) |
+| Ticket Workflows | `POST /api/tickets/{id}/assign/` | Bearer Token | Assign ticket to eligible agent (Manager/Admin only) |
+| Ticket Workflows | `POST /api/tickets/{id}/status/` | Bearer Token | Update ticket status (Agent/Manager/Admin) |
+| Ticket Workflows | `POST /api/tickets/{id}/resolve/` | Bearer Token | Mark ticket as RESOLVED with timestamp |
+| Ticket Workflows | `POST /api/tickets/{id}/close/` | Bearer Token | Mark ticket as CLOSED |
+| Ticket Workflows | `POST /api/tickets/{id}/reopen/` | Bearer Token | Reopen ticket to OPEN and clear resolved_at |
+| Interactive Docs | `GET /api/docs/` | Public | OpenAPI 3 Swagger UI documentation |
+| Orders | `GET /api/orders/` \| `GET /api/orders/{id}/` | Bearer Token | Future Phase |
+| Support AI Chat | `POST /api/support/chat/` | Bearer Token | Future Phase |
+| Prediction | `GET /api/predictions/` \| `POST /api/predictions/run/` | Bearer Token | Future Phase |
+| Simulation | `POST /api/simulations/` \| `GET /api/simulations/{id}/` | Bearer Token | Future Phase |
+| Approval | `POST /api/simulations/{id}/approve/` \| `reject/` | Bearer Token | Future Phase |
+
+**Ticket Choices:**
+- **Category:** `DELIVERY`, `PAYMENT`, `REFUND`, `CANCELLATION`, `ACCOUNT`, `PRODUCT`, `OTHER`
+- **Priority:** `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`
+- **Status:** `OPEN`, `IN_PROGRESS`, `WAITING_FOR_CUSTOMER`, `RESOLVED`, `CLOSED`
+
+**Ticket Query Parameters:**
+- `?status=<status>` (e.g. `?status=OPEN`)
+- `?priority=<priority>` (e.g. `?priority=HIGH`)
+- `?category=<category>` (e.g. `?category=DELIVERY`)
+- `?assigned_to=<id|unassigned>` (e.g. `?assigned_to=unassigned`)
+- `?customer=<id>` (Staff only)
+- `?search=<keyword>` (searches ticket number, subject, description)
+- `?ordering=<field>` (e.g. `-created_at`, `priority`, `status`)
+- `?page=<number>&page_size=<size>` (default size 10)
+
+**Example Ticket Request (`POST /api/tickets/`):**
+```json
+{
+  "subject": "Delayed shipment for order #9821",
+  "description": "Package has been stuck in transit for 4 days past the estimated delivery date.",
+  "category": "DELIVERY",
+  "priority": "HIGH"
+}
+```
+
+**Example Ticket Response (`200 OK` / `201 Created`):**
+```json
+{
+  "id": 1,
+  "ticket_number": "TIK-20261016-B4E8F2",
+  "customer_name": "Alice Customer",
+  "customer_email": "alice@example.com",
+  "subject": "Delayed shipment for order #9821",
+  "description": "Package has been stuck in transit for 4 days past the estimated delivery date.",
+  "category": "DELIVERY",
+  "priority": "HIGH",
+  "status": "OPEN",
+  "assigned_to_name": null,
+  "assigned_to_username": null,
+  "created_at": "2026-10-16T16:08:15.123456Z",
+  "updated_at": "2026-10-16T16:08:15.123456Z",
+  "resolved_at": null
+}
+```
+
+
+**Example Customer Profile Request (`POST /api/customers/`):**
+```json
+{
+  "name": "Jane Customer",
+  "email": "jane@example.com",
+  "phone": "+1987654321",
+  "address": "456 Elm Street, Suite 100"
+}
+```
+
+**Example Customer Profile Response (`200 OK` / `201 Created`):**
+```json
+{
+  "id": 1,
+  "username": "jane_cust",
+  "user_role": "CUSTOMER",
+  "name": "Jane Customer",
+  "email": "jane@example.com",
+  "phone": "+1987654321",
+  "address": "456 Elm Street, Suite 100",
+  "created_at": "2026-10-15T10:24:50.123456Z",
+  "updated_at": "2026-10-15T10:24:50.123456Z"
+}
+```
+
 
 **Example Prediction Response:**
 ```json
