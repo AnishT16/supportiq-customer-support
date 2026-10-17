@@ -52,6 +52,11 @@ coverage.xml
 *.sublime-project
 *.sublime-workspace
 
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
 # Operating System Files
 .DS_Store
 Thumbs.db
