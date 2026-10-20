@@ -18,11 +18,18 @@ __version__ = "0.1.0"
 
 try:
     from ai_engine.rag import KnowledgeBase, search_knowledge_base
+    from ai_engine.agent import SupportIQAgent, AgentRequest, AgentResponse, ControlledToolRegistry
 except ImportError:
     from .rag import KnowledgeBase, search_knowledge_base
+    from .agent import SupportIQAgent, AgentRequest, AgentResponse, ControlledToolRegistry
 
 __all__ = [
     "__version__",
     "KnowledgeBase",
     "search_knowledge_base",
+    "SupportIQAgent",
+    "AgentRequest",
+    "AgentResponse",
+    "ControlledToolRegistry",
 ]
+
